@@ -4,8 +4,49 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const Anthropic = require('@anthropic-ai/sdk');
 const path = require('path');
+
+// ── Gemini API Helper (no SDK needed — pure fetch) ────────────────────────────
+async function callGemini(systemPrompt, userMessage, history = []) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  // Build contents array: system instruction + conversation history + current message
+  const contents = [];
+
+  // Add conversation history
+  for (const msg of history) {
+    contents.push({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    });
+  }
+
+  // Add current user message
+  contents.push({ role: 'user', parts: [{ text: userMessage }] });
+
+  const body = {
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents,
+    generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini API error: ${res.status} — ${err}`);
+  }
+
+  const data = await res.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,10 +68,8 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ── Anthropic Client ──────────────────────────────────────────────────────────
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || ''
-});
+// ── AI Status ─────────────────────────────────────────────────────────────────
+const AI_PROVIDER = process.env.GEMINI_API_KEY ? 'gemini' : 'fallback';
 
 // ── AMR Data ──────────────────────────────────────────────────────────────────
 const AMR_DATA = {
@@ -323,7 +362,7 @@ const STEWARDSHIP_DATA = {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0', aiProvider: AI_PROVIDER });
 });
 
 // Dashboard stats
@@ -457,23 +496,9 @@ app.post('/api/stewardship', (req, res) => {
 // AI Chat
 app.post('/api/chat', async (req, res) => {
   const { message, conversationHistory = [] } = req.body;
-
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
-  const messages = [
-    ...conversationHistory.slice(-10).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message }
-  ];
-
-  try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.json({ response: getFallbackResponse(message) });
-    }
-
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1000,
-      system: `You are AMR Guardian AI, an expert clinical and public health assistant specializing in antimicrobial resistance (AMR). You provide accurate, evidence-based answers about:
+  const systemPrompt = `You are AMR Guardian AI, an expert clinical and public health assistant specializing in antimicrobial resistance (AMR). You provide accurate, evidence-based answers about:
 - AMR statistics, trends, and global burden
 - Specific bacterial pathogens and their resistance mechanisms
 - Antibiotic treatment guidance and stewardship principles
@@ -481,13 +506,15 @@ app.post('/api/chat', async (req, res) => {
 - Global health policy and One Health approaches
 - Diagnostic tools and wastewater surveillance
 
-Always be concise, practical, and evidence-based. Cite WHO, CDC, or peer-reviewed data where relevant. For treatment questions, always remind users to use local antibiograms and clinical judgment. Current date: ${new Date().toISOString().split('T')[0]}.`,
-      messages
-    });
+Always be concise, practical, and evidence-based. Cite WHO, CDC, or peer-reviewed data where relevant. For treatment questions, always remind users to use local antibiograms and clinical judgment. Current date: ${new Date().toISOString().split('T')[0]}.`;
 
-    res.json({ response: response.content[0].text });
+  try {
+    const history = conversationHistory.slice(-10);
+    const response = await callGemini(systemPrompt, message, history);
+    if (response) return res.json({ response });
+    res.json({ response: getFallbackResponse(message) });
   } catch (error) {
-    console.error('Claude API error:', error.message);
+    console.error('Gemini API error:', error.message);
     res.json({ response: getFallbackResponse(message) });
   }
 });
@@ -504,44 +531,35 @@ app.post('/api/reports/generate', async (req, res) => {
 4. Emerging resistance genes of concern (NDM-1, KPC, OXA-48, mcr-1)
 5. Pipeline update: new antibiotic approvals or trial results
 6. Clinical action items for frontline clinicians
-Format as a professional public health report. Be specific with data.`,
+Format as a professional public health report. Be specific with data. Use ## for section headers and • for bullets.`,
 
     antibiogram: `Generate a regional antibiogram report for Sub-Saharan Africa (Q2 2026). Include:
 1. Executive summary of resistance situation
-2. Resistance rates table for E. coli, K. pneumoniae, S. aureus against: ampicillin, ciprofloxacin, TMP-SMX, ceftriaxone, gentamicin, imipenem
+2. Resistance rates for E. coli, K. pneumoniae, S. aureus against: ampicillin, ciprofloxacin, TMP-SMX, ceftriaxone, gentamicin, imipenem
 3. Recommended empiric therapy for: UTI, community pneumonia, sepsis, skin infection
 4. Antibiotics to absolutely avoid empirically due to >50% resistance
-5. Stewardship recommendations for facility antimicrobial committees
-Provide realistic resistance percentages based on WHO GLASS Africa data.`,
+5. Stewardship recommendations for antimicrobial committees
+Use ## for section headers and • for bullet points. Provide realistic resistance percentages.`,
 
-    outbreak: `Generate an outbreak investigation report for the carbapenem-resistant Klebsiella pneumoniae (NDM-1) cluster in Nairobi, Kenya.
+    outbreak: `Generate an outbreak investigation report for carbapenem-resistant Klebsiella pneumoniae (NDM-1) in Nairobi, Kenya.
 Case count: 147, Mortality: 23%, Detection date: May 4 2026. Include:
-1. Outbreak timeline and epidemiological curve
-2. Genomic findings (NDM-1 mediated resistance mechanism, plasmid types)
-3. Transmission analysis and risk factors identified
-4. Containment measures implemented (isolation, cohorting, contact tracing)
-5. Treatment options available (colistin, ceftazidime-avibactam, tigecycline)
+1. Outbreak timeline and epidemiological summary
+2. Genomic findings (NDM-1 mechanism, plasmid types)
+3. Transmission analysis and risk factors
+4. Containment measures implemented
+5. Treatment options (colistin, ceftazidime-avibactam, tigecycline)
 6. Recommendations for clinicians and infection control
-7. Public health reporting requirements
-Professional epidemiological investigation format.`
+Use ## for section headers and • for bullet points. Professional epidemiological format.`
   };
 
   const prompt = prompts[reportType];
   if (!prompt) return res.status(400).json({ error: 'Invalid report type' });
 
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.json({ report: getStaticReport(reportType), generated: new Date().toISOString() });
-    }
-
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1500,
-      system: 'You are AMR Guardian, an AI-powered antimicrobial resistance intelligence system. Generate professional, evidence-based public health reports with realistic AMR data. Use clear section headers with ## and bullet points with •.',
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    res.json({ report: response.content[0].text, generated: new Date().toISOString() });
+    const systemPrompt = 'You are AMR Guardian, an AI-powered antimicrobial resistance intelligence system. Generate professional, evidence-based public health reports with realistic AMR data. Use ## for section headers and • for bullet points.';
+    const response = await callGemini(systemPrompt, prompt);
+    if (response) return res.json({ report: response, generated: new Date().toISOString() });
+    res.json({ report: getStaticReport(reportType), generated: new Date().toISOString() });
   } catch (error) {
     console.error('Report generation error:', error.message);
     res.json({ report: getStaticReport(reportType), generated: new Date().toISOString() });
@@ -661,5 +679,5 @@ if (process.env.NODE_ENV === 'production') {
 app.listen(PORT, () => {
   console.log(`✅ AMR Guardian API running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🤖 Claude AI: ${process.env.ANTHROPIC_API_KEY ? 'Connected' : 'Using fallback responses'}`);
+  console.log(`🤖 AI Provider: ${process.env.GEMINI_API_KEY ? 'Gemini (Free)' : 'Built-in fallback responses'}`);
 });
