@@ -11,7 +11,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: FRONTEND_URL
         value: https://amr-guardian.onrender.com
@@ -20,7 +20,6 @@ services:
   - type: web
     name: amr-guardian
     env: static
-    region: oregon
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
