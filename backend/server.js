@@ -222,9 +222,22 @@ app.post('/api/reports/generate', async (req, res) => {
 // Admin Login
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    res.json({ success: true, token: Buffer.from(username + ':' + Date.now()).toString('base64'), message: 'Login successful' });
+
+  // Always read fresh from env at request time — never cache at startup
+  const validUser = process.env.ADMIN_USERNAME || 'amrguardian_admin';
+  const validPass = process.env.ADMIN_PASSWORD || 'AMR@Guard2026!';
+
+  // Trim both inputs to avoid whitespace issues
+  const inputUser = (username || '').trim();
+  const inputPass = (password || '').trim();
+
+  console.log('Login attempt:', inputUser); // visible in Render logs for debugging
+
+  if (inputUser === validUser && inputPass === validPass) {
+    const token = Buffer.from(inputUser + ':' + Date.now()).toString('base64');
+    res.json({ success: true, token, message: 'Login successful' });
   } else {
+    console.log('Expected user:', validUser, '| Got:', inputUser);
     res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 });
