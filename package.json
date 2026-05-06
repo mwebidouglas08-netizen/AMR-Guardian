@@ -1,15 +1,15 @@
 {
   "name": "amr-guardian",
   "version": "1.0.0",
-  "description": "AMR Guardian — AI-Powered Antimicrobial Resistance Intelligence Platform",
+  "description": "AMR Guardian - AI-Powered AMR Intelligence Platform",
+  "main": "backend/server.js",
   "scripts": {
-    "install-all": "cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "start": "cd backend && node server.js",
-    "dev-backend": "cd backend && npm run dev",
-    "dev-frontend": "cd frontend && npm start"
+    "build": "npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend",
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
