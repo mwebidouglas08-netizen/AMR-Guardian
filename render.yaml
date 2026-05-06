@@ -1,33 +1,17 @@
 services:
-  # Backend API Service
   - type: web
-    name: amr-guardian-api
+    name: amr-guardian
     env: node
     region: oregon
     plan: free
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: cd backend && node server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: GEMINI_API_KEY
         sync: false
-      - key: FRONTEND_URL
-        value: https://amr-guardian.onrender.com
-
-  # Frontend Static Site
-  - type: web
-    name: amr-guardian
-    env: static
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: build
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://amr-guardian-api.onrender.com/api
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
