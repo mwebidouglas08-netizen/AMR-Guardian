@@ -1,7 +1,7 @@
 {
   "name": "amr-guardian-backend",
   "version": "1.0.0",
-  "description": "AMR Guardian Backend API",
+  "description": "AMR Guardian Unified Server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
