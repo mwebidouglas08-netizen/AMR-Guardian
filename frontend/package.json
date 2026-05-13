@@ -1,0 +1,12 @@
+{
+  "name": "amr-guardian",
+  "version": "1.0.0",
+  "description": "AMR Guardian - AI-Powered AMR Intelligence Platform",
+  "scripts": {
+    "build": "npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "node backend/server.js"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
