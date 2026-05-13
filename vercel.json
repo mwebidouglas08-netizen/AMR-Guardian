@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "installCommand": "npm install",
-  "framework": null,
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
