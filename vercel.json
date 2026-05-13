@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/build",
+  "framework": null,
+  "functions": {
+    "api/**/*.js": {
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api/stats", "destination": "/api/stats" },
+    { "source": "/api/alerts", "destination": "/api/alerts" },
+    { "source": "/api/antibiogram", "destination": "/api/antibiogram" },
+    { "source": "/api/predict", "destination": "/api/predict" },
+    { "source": "/api/stewardship", "destination": "/api/stewardship" },
+    { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/resistance/regional", "destination": "/api/resistance/regional" },
+    { "source": "/api/resistance/pathogens", "destination": "/api/resistance/pathogens" },
+    { "source": "/api/outbreak/signals", "destination": "/api/outbreak/signals" },
+    { "source": "/api/reports/generate", "destination": "/api/reports/generate" },
+    { "source": "/api/admin/login", "destination": "/api/admin/login" },
+    { "source": "/api/admin/overview", "destination": "/api/admin/overview" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
