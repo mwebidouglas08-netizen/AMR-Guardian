@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AMR Guardian Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0c10;color:#e8eaf0;font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.box{background:#1c212d;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:36px;width:380px}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.li{width:36px;height:36px;background:linear-gradient(135deg,#00d4a0,#4a9eff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.lt{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.ls{font-size:10px;color:#8891a8;letter-spacing:1px;text-transform:uppercase}
+h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.sub{font-size:12px;color:#8891a8;margin-bottom:24px}
+.fg{margin-bottom:16px}
+label{display:block;font-size:11px;color:#8891a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-family:'DM Mono',monospace}
+input{width:100%;background:#111318;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 14px;color:#e8eaf0;font-size:13px;outline:none;transition:border-color .2s}
+input:focus{border-color:#00d4a0}
+.btn{width:100%;background:#00d4a0;color:#000;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.25);color:#ff6b7a;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:14px;display:none}
+.dw{display:none;width:100%;min-height:100vh;flex-direction:column}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:#111318;border-bottom:1px solid rgba(255,255,255,.07)}
+.db{padding:28px;max-width:1100px;margin:0 auto;width:100%}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g2{grid-template-columns:1fr 1fr}
+.card{background:#1c212d;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px}
+.cl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8891a8;font-family:'DM Mono',monospace;margin-bottom:8px}
+.cv{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;line-height:1}
+.st{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;color:#8891a8;font-family:'DM Mono',monospace;font-weight:400;border-bottom:1px solid rgba(255,255,255,.07)}
+td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+tr:last-child td{border-bottom:none}
+.bge{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace}
+.bc{background:rgba(255,71,87,.15);color:#ff6b7a;border:1px solid rgba(255,71,87,.2)}
+.bh{background:rgba(255,140,66,.15);color:#ffaa77;border:1px solid rgba(255,140,66,.2)}
+.bm{background:rgba(255,209,102,.15);color:#ffd166;border:1px solid rgba(255,209,102,.2)}
+.ok{color:#00d4a0}.wn{color:#ffd166}.mn{font-family:'DM Mono',monospace;font-size:12px;color:#8891a8}
+.lb{background:transparent;color:#8891a8;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 16px;font-size:12px;cursor:pointer}
+.lb:hover{color:#e8eaf0}
+@media(max-width:800px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.db{padding:16px}}
+</style>
+</head>
+<body>
+
+<div id="lp">
+  <div class="box">
+    <div class="logo">
+      <div class="li">🧬</div>
+      <div>
+        <div class="lt">AMR Guardian</div>
+        <div class="ls">Admin Panel</div>
+      </div>
+    </div>
+    <h2>Administrator Login</h2>
+    <p class="sub">Restricted access — authorised personnel only</p>
+    <div class="err" id="er"></div>
+    <div class="fg">
+      <label>Username</label>
+      <input type="text" id="un" placeholder="Enter username" autocomplete="username"/>
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="pw" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+    <button class="btn" id="lb" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<div id="dp" class="dw">
+  <div class="dh">
+    <div class="logo">
+      <div class="li">🧬</div>
+      <div>
+        <div class="lt">AMR Guardian</div>
+        <div class="ls">Admin Dashboard</div>
+      </div>
+    </div>
+    <button class="lb" onclick="logout()">Sign Out</button>
+  </div>
+  <div class="db">
+    <div class="grid g4" style="margin-bottom:20px" id="sc"></div>
+    <div class="grid g2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="st">System Health</div>
+        <div id="sh"></div>
+      </div>
+      <div class="card">
+        <div class="st">Regional Resistance</div>
+        <div id="rt"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="st">All AMR Alerts</div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Location</th><th>Pathogen</th><th>Resistance</th><th>Risk</th><th>Cases</th><th>Mortality</th></tr>
+        </thead>
+        <tbody id="at"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+var tk = null;
+
+async function login() {
+  var u = document.getElementById('un').value.trim();
+  var p = document.getElementById('pw').value.trim();
+  var b = document.getElementById('lb');
+  var e = document.getElementById('er');
+  if (!u || !p) { e.textContent = 'Please enter both fields.'; e.style.display = 'block'; return; }
+  b.disabled = true; b.textContent = 'Signing in...'; e.style.display = 'none';
+  try {
+    var r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+    var d = await r.json();
+    if (d.success) {
+      tk = d.token;
+      document.getElementById('lp').style.display = 'none';
+      document.getElementById('dp').style.display = 'flex';
+      loadDash();
+    } else {
+      e.textContent = d.message || 'Invalid credentials';
+      e.style.display = 'block';
+    }
+  } catch (ex) {
+    e.textContent = 'Connection error. Please try again.';
+    e.style.display = 'block';
+  }
+  b.disabled = false; b.textContent = 'Sign In';
+}
+
+function logout() {
+  tk = null;
+  document.getElementById('dp').style.display = 'none';
+  document.getElementById('lp').style.display = 'flex';
+  document.getElementById('un').value = '';
+  document.getElementById('pw').value = '';
+}
+
+async function loadDash() {
+  try {
+    var r = await fetch('/api/admin/overview', { headers: { 'Authorization': 'Bearer ' + tk } });
+    var d = await r.json();
+    var s = d.summary;
+
+    document.getElementById('sc').innerHTML = [
+      { l: 'Total Alerts', v: s.totalAlerts, c: '#4a9eff' },
+      { l: 'Critical Alerts', v: s.criticalAlerts, c: '#ff4757' },
+      { l: 'High Alerts', v: s.highAlerts, c: '#ff8c42' },
+      { l: 'Countries', v: s.countriesMonitored, c: '#00d4a0' }
+    ].map(function(x) {
+      return '<div class="card"><div class="cl">' + x.l + '</div><div class="cv" style="color:' + x.c + '">' + x.v + '</div></div>';
+    }).join('');
+
+    var h = d.systemHealth;
+    document.getElementById('sh').innerHTML = [
+      ['AI Provider', s.apiStatus, s.apiStatus.includes('Connected') ? 'ok' : 'wn'],
+      ['Platform', h.platform, 'ok'],
+      ['Node Version', h.nodeVersion, 'mn'],
+      ['Environment', h.environment, 'mn'],
+      ['Last Updated', new Date(s.lastUpdated).toLocaleTimeString(), 'mn']
+    ].map(function(x) {
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px"><span style="color:#8891a8">' + x[0] + '</span><span class="' + x[2] + '">' + x[1] + '</span></div>';
+    }).join('');
+
+    document.getElementById('rt').innerHTML = '<div style="display:flex;flex-direction:column;gap:7px">' + d.regionalResistance.map(function(r) {
+      var c = r.rate > 70 ? '#ff4757' : r.rate > 50 ? '#ff8c42' : r.rate > 30 ? '#ffd166' : '#00d4a0';
+      return '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:140px;color:#8891a8;flex-shrink:0">' + r.region + '</span><div style="flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px"><div style="width:' + r.rate + '%;height:100%;background:' + c + ';border-radius:3px"></div></div><span style="width:35px;text-align:right;color:' + c + ';font-family:DM Mono,monospace">' + r.rate + '%</span></div>';
+    }).join('') + '</div>';
+
+    document.getElementById('at').innerHTML = d.alerts.map(function(a) {
+      return '<tr><td class="mn">' + a.date + '</td><td>' + a.location + '</td><td style="font-style:italic">' + a.pathogen + '</td><td>' + a.resistanceType + '</td><td><span class="bge ' + (a.risk === 'critical' ? 'bc' : a.risk === 'high' ? 'bh' : 'bm') + '">' + a.risk.charAt(0).toUpperCase() + a.risk.slice(1) + '</span></td><td class="mn">' + a.cases.toLocaleString() + '</td><td class="mn">' + a.mortality + '</td></tr>';
+    }).join('');
+  } catch (ex) {
+    console.error('Dashboard error:', ex);
+  }
+}
+</script>
+</body>
+</html>
